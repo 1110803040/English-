@@ -10,23 +10,16 @@
         .container { max-width: 800px; margin: 0 auto; background: white; padding: 25px; border-radius: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         h1 { text-align: center; color: var(--primary); margin-bottom: 5px; }
         .subtitle { text-align: center; color: #64748b; margin-bottom: 25px; }
-        
-        .quiz-item { margin-bottom: 25px; padding: 18px; border-radius: 10px; border: 1px solid #e2e8f0; }
+        .quiz-item { margin-bottom: 25px; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; transition: 0.3s; }
         .question-title { font-weight: bold; font-size: 1.1rem; margin-bottom: 15px; display: block; }
         .options-group { display: flex; flex-direction: column; gap: 10px; }
-        
-        .option-label { display: flex; align-items: center; padding: 12px; background: #f1f5f9; border-radius: 8px; cursor: pointer; transition: 0.2s; border: 2px solid transparent; }
-        .option-label:hover { background: #e2e8f0; }
+        .option-label { display: flex; align-items: center; padding: 12px; background: #f1f5f9; border-radius: 8px; cursor: pointer; border: 2px solid transparent; }
         input[type="radio"] { margin-right: 12px; width: 18px; height: 18px; }
-
-        /* 回饋樣式 */
-        .correct-ans { background: #dcfce7 !important; border-color: var(--success) !important; color: #065f46; font-weight: bold; }
-        .wrong-ans { background: #fee2e2 !important; border-color: var(--error) !important; color: #991b1b; }
-
+        /* 訂正樣式 */
+        .correct-ans { background: #dcfce7 !important; border-color: var(--success) !important; font-weight: bold; }
+        .wrong-ans { background: #fee2e2 !important; border-color: var(--error) !important; }
         .submit-area { text-align: center; margin-top: 30px; position: sticky; bottom: 20px; }
         .btn { background: var(--primary); color: white; padding: 15px 50px; border: none; border-radius: 30px; font-weight: bold; cursor: pointer; font-size: 1.2rem; box-shadow: 0 4px 12px rgba(37,99,235,0.3); }
-        .btn:disabled { background: #94a3b8; cursor: not-allowed; box-shadow: none; }
-
         #result-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(5px); }
         .result-box { background: white; padding: 35px; border-radius: 24px; text-align: center; width: 85%; max-width: 400px; }
         .score-display { font-size: 4.5rem; font-weight: 800; color: var(--success); margin: 10px 0; }
@@ -34,6 +27,100 @@
 </head>
 <body>
 
+<div class="container">
+    <h1>📝 英文期中複習</h1>
+    <div class="subtitle">共 40 題，滿分 100 分 (每題 2.5 分)</div>
+    <div id="questions-container"></div>
+    <div class="submit-area">
+        <button id="submit-btn" class="btn" onclick="calculateScore()">送出評分</button>
+    </div>
+</div>
+
+<div id="result-modal">
+    <div class="result-box">
+        <h2>測驗得分</h2>
+        <div class="score-display" id="final-score">0</div>
+        <p id="score-detail" style="color: #64748b;"></p>
+        <button class="btn" style="padding: 10px 30px; font-size: 1rem;" onclick="closeModal()">查看訂正</button>
+        <button class="btn" style="background:#64748b; padding: 10px 30px; font-size: 1rem; margin-top:10px;" onclick="location.reload()">重新測驗</button>
+    </div>
+</div>
+
+<script>
+const quizData = [
+    { q: "1. Flight 209 is a _______ flight.", o: ["three hours", "three-hour"], a: 1 },
+    { q: "2. Your grandfather looks young for a _______ man.", o: ["75 years old", "75-year-old"], a: 1 },
+    { q: "3. Lunch usually costs about _______.", o: ["five dollars", "five-dollar"], a: 0 },
+    { q: "4. It's nice to have a _______ vacation.", o: ["two weeks", "two-week"], a: 1 },
+    { q: "5. Robert's house has _______.", o: ["three bedrooms", "three-bedroom"], a: 0 },
+    { q: "6. I'd like to take a _______ break.", o: ["ten minutes", "ten-minute"], a: 1 },
+    { q: "7. Lt Lee's new sports car has _______.", o: ["two doors", "two-door"], a: 0 },
+    { q: "8. You need to use a _______ pot to cook the rice.", o: ["three quarts", "three-quart"], a: 1 },
+    { q: "9. It _______ a new car.", o: ["to look like", "looks like", "like to look", "looks like it"], a: 1 },
+    { q: "10. The letter has six pages. It's a _______ letter.", o: ["page six", "six-pages", "six-page", "pages six"], a: 2 },
+    { q: "11. That house _______ over a hundred years ago.", o: ["built", "was built", "is built", "was building"], a: 1 },
+    { q: "12. I think he's about 35 years old. He's in his _______-thirties.", o: ["mid", "neat", "elderly", "early"], a: 0 },
+    { q: "13. _______ to the library?", o: ["The books were return", "Did the books return", "Were the books returned", "The books returned"], a: 2 },
+    { q: "14. If John says he's coming at 8:00, he'll be here. He's a very _______ person.", o: ["reliable", "neat", "messy", "stingy"], a: 0 },
+    { q: "15. Many men become _______ when they get older. They lose a lot of their hair.", o: ["curly", "bald", "wavy", "blond"], a: 1 },
+    { q: "16. This homework isn't extremely difficult, but it's very _______.", o: ["demanding", "dependable", "neat", "reliable"], a: 0 },
+    { q: "17. He appears _______ the boss.", o: ["be", "to be", "being", "to be he's"], a: 1 },
+    { q: "18. Ann: What's the best hotel in the city? Roger: Well, the Grande Hotel is a _______ hotel.", o: ["five-star", "gets five stars", "five stars", "with five stars"], a: 0 },
+    { q: "19. My parents' _______ is very important to me. That's why I always tell them the truth.", o: ["character", "brunette", "quality", "trust"], a: 3 },
+    { q: "20. The angry customer _______ his money back.", o: ["shared", "relied on", "demanded", "depended on"], a: 2 },
+    { q: "21. I really can't remember _______.", o: ["is the apartment furnished", "if the apartment is furnished", "the apartment isn't furnished"], a: 1 },
+    { q: "22. It's really hot in here. Can we turn on the _______?", o: ["efficiency", "heating", "air conditioning"], a: 2 },
+    { q: "23. This library book is due. You'd better _______.", o: ["return it", "check it out", "lend it to me"], a: 0 },
+    { q: "24. I need to save money so I can furnish my _______.", o: ["apartment", "car", "lease"], a: 0 },
+    { q: "25. Can you please tell me when _______ to arrive?", o: ["if flight 35 is scheduled", "is flight 35 scheduled", "flight 35 is scheduled"], a: 2 },
+    { q: "26. John: Why do you exercise so much? Mike: Because it keeps _______.", o: ["me to fit", "I'm fit", "me fit"], a: 2 },
+    { q: "27. Let's take highway 95 because it's a _______.", o: ["four-lanes highway", "four-lane highway", "four lane of highway"], a: 1 },
+    { q: "28. Excuse me, do you know _______ credit cards?", o: ["does this store accepts", "if this store accepts", "whether accepts this store"], a: 1 },
+    { q: "29. What utilities do you pay?", o: ["efficiency and lease", "garbage and paint", "gas and water"], a: 2 },
+    { q: "30. Maria is upset because she had _______ with her husband.", o: ["a lease", "an argument", "a section"], a: 1 },
+    { q: "31. I wonder _______ right now in China.", o: ["what the weather is like", "how is the weather like", "if the weather is like"], a: 0 },
+    { q: "32. I'd like to play tennis. Are there any _______ around here?", o: ["courts", "sections", "districts"], a: 0 },
+    { q: "33. Transportation in this city is difficult. There is too much _______.", o: ["paint", "traffic", "privacy"], a: 1 },
+    { q: "34. Julia works in real estate. She sells _______.", o: ["furniture", "transportation", "houses and apartments"], a: 2 },
+    { q: "35. Because of problems at work, Bob was _______ from the promotion list.", o: ["excluded", "included", "considered"], a: 0 },
+    { q: "36. I'd like to lease _______.", o: ["a pet", "an apartment", "a classified ad"], a: 1 },
+    { q: "37. Tickets for the play are _______ at the theater box office.", o: ["public", "including", "available"], a: 2 },
+    { q: "38. The Smith's have three _______: a cat and two dogs.", o: ["pets", "sections", "arguments"], a: 0 },
+    { q: "39. Do you have an invitation? This is a _______ party.", o: ["due", "furnished", "private"], a: 2 },
+    { q: "40. Brad and Mark always _______ about who gets to go first.", o: ["include", "argue", "lease"], a: 1 }
+];
+
+const container = document.getElementById('questions-container');
+quizData.forEach((item, qIdx) => {
+    const qDiv = document.createElement('div');
+    qDiv.className = 'quiz-item';
+    qDiv.innerHTML = `<span class="question-title">${item.q}</span><div class="options-group">${item.o.map((opt, oIdx) => `
+        <label class="option-label" id="label-${qIdx}-${oIdx}"><input type="radio" name="q${qIdx}" value="${oIdx}"><span>${opt}</span></label>`).join('')}</div>`;
+    container.appendChild(qDiv);
+});
+
+function calculateScore() {
+    let score = 0;
+    quizData.forEach((item, qIdx) => {
+        const selected = document.querySelector(`input[name="q${qIdx}"]:checked`);
+        document.getElementById(`label-${qIdx}-${item.a}`).classList.add('correct-ans');
+        if (selected) {
+            const val = parseInt(selected.value);
+            if (val === item.a) score++;
+            else document.getElementById(`label-${qIdx}-${val}`).classList.add('wrong-ans');
+        }
+        document.querySelectorAll(`input[name="q${qIdx}"]`).forEach(i => i.disabled = true);
+    });
+    document.getElementById('final-score').innerText = score * 2.5;
+    document.getElementById('score-detail').innerText = `答對題數：${score} / 40`;
+    document.getElementById('result-modal').style.display = 'flex';
+    document.getElementById('submit-btn').disabled = true;
+    window.scrollTo(0, 0);
+}
+function closeModal() { document.getElementById('result-modal').style.display = 'none'; }
+</script>
+</body>
+</html>
 <div class="container">
     <h1>📝 英文期中複習</h1>
     <div class="subtitle">共 40 題，滿分 100 分 (每題 2.5 分)</div>
