@@ -3,101 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>英文期中考練習系統 - 100分制</title>
+    <title>英文期中測驗系統</title>
     <style>
-        :root { --primary: #2563eb; --bg: #f8fafc; --text: #1e293b; --success: #10b981; }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; padding: 20px; margin: 0; }
-        .container { max-width: 800px; margin: 0 auto; background: white; padding: 40px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
-        h1 { text-align: center; color: var(--primary); margin-bottom: 10px; }
-        .subtitle { text-align: center; color: #64748b; margin-bottom: 30px; font-size: 0.9rem; }
+        :root { --primary: #2563eb; --bg: #f8fafc; --text: #1e293b; --success: #10b981; --error: #ef4444; }
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); padding: 20px; margin: 0; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px 30px; border-radius: 16px; shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        h1 { text-align: center; color: var(--primary); }
+        .quiz-item { margin-bottom: 25px; padding: 15px; border-radius: 10px; border: 1px solid #e2e8f0; }
+        .question-title { font-weight: bold; margin-bottom: 12px; display: block; }
+        .options-group { display: flex; flex-direction: column; gap: 8px; }
+        .option-label { display: flex; align-items: center; padding: 10px; background: #f1f5f9; border-radius: 6px; cursor: pointer; border: 2px solid transparent; }
+        input[type="radio"] { margin-right: 10px; }
         
-        .quiz-item { margin-bottom: 30px; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; transition: 0.3s; }
-        .quiz-item:hover { border-color: #cbd5e1; box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
-        .question-title { font-weight: 600; font-size: 1.1rem; margin-bottom: 15px; display: block; }
+        /* 狀態樣式 */
+        .correct-ans { background: #dcfce7 !important; border-color: var(--success) !important; }
+        .wrong-ans { background: #fee2e2 !important; border-color: var(--error) !important; }
         
-        .options-group { display: flex; flex-direction: column; gap: 10px; }
-        .option-label { display: flex; align-items: center; padding: 12px 15px; background: #f1f5f9; border-radius: 8px; cursor: pointer; transition: all 0.2s; border: 2px solid transparent; }
-        .option-label:hover { background: #e2e8f0; }
+        .submit-area { text-align: center; margin: 30px 0; position: sticky; bottom: 20px; }
+        .btn { background: var(--primary); color: white; padding: 12px 40px; border: none; border-radius: 25px; font-weight: bold; cursor: pointer; font-size: 1.1rem; }
         
-        input[type="radio"] { margin-right: 12px; width: 18px; height: 18px; cursor: pointer; }
-        input[type="radio"]:checked + span { font-weight: bold; color: var(--primary); }
-        
-        .submit-area { text-align: center; margin-top: 40px; position: sticky; bottom: 20px; }
-        .btn-submit { background: var(--primary); color: white; padding: 15px 60px; border: none; border-radius: 30px; font-size: 1.2rem; font-weight: bold; cursor: pointer; box-shadow: 0 10px 15px rgba(37, 99, 235, 0.2); transition: 0.2s; }
-        .btn-submit:hover { transform: scale(1.05); background: #1d4ed8; }
-
-        #result-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 100; backdrop-filter: blur(4px); }
-        .result-content { background: white; padding: 40px; border-radius: 24px; text-align: center; max-width: 400px; width: 90%; box-shadow: 0 20px 25px rgba(0,0,0,0.2); }
-        .score-label { font-size: 1.2rem; color: #64748b; }
-        .score-num { font-size: 5rem; font-weight: 800; color: var(--success); margin: 10px 0; }
-        .score-info { margin-bottom: 30px; color: #475569; }
+        #result-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); justify-content: center; align-items: center; z-index: 1000; }
+        .result-box { background: white; padding: 30px; border-radius: 20px; text-align: center; width: 90%; max-width: 400px; }
+        .score-display { font-size: 4rem; font-weight: 800; color: var(--primary); }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>📝 英文期中複習測驗</h1>
-    <div class="subtitle">共 40 題，滿分 100 分 (每題 2.5 分)</div>
-    <form id="quiz-form">
-        <div id="questions-container"></div>
-        <div class="submit-area">
-            <button type="button" class="btn-submit" onclick="calculateScore()">送出答案</button>
-        </div>
-    </form>
+    <h1>📝 英文期中複習 (100分制)</h1>
+    <div id="questions-container"></div>
+    <div class="submit-area">
+        <button id="submit-btn" class="btn" onclick="calculateScore()">交卷並檢查答案</button>
+    </div>
 </div>
 
 <div id="result-modal">
-    <div class="result-content">
-        <div class="score-label">測驗得分</div>
-        <div class="score-num" id="final-score">0</div>
-        <div class="score-info" id="score-text"></div>
-        <button class="btn-submit" style="padding: 12px 40px; font-size: 1rem;" onclick="location.reload()">重新挑戰</button>
+    <div class="result-box">
+        <h2>測驗得分</h2>
+        <div class="score-display" id="final-score">0</div>
+        <p id="score-detail"></p>
+        <button class="btn" onclick="closeModal()">查看錯題</button>
+        <button class="btn" style="background:#64748b; margin-top:10px;" onclick="location.reload()">重新練習</button>
     </div>
 </div>
 
 <script>
-// 題庫資料 (引用自 source: 1-49)
+[span_2](start_span)[span_3](start_span)[span_4](start_span)[span_5](start_span)// 完整題庫資料[span_2](end_span)[span_3](end_span)[span_4](end_span)[span_5](end_span)
 const quizData = [
-    [span_0](start_span){ q: "1. Flight 209 is a _______ flight.[span_0](end_span)", o: ["three hours", "three-hour"], a: 1 },
-    { q: "2. [span_1](start_span)Your grandfather looks young for a _______ man.[span_1](end_span)", o: ["75 years old", "75-year-old"], a: 1 },
-    { q: "3. [span_2](start_span)Lunch usually costs about _______.[span_2](end_span)", o: ["five dollars", "five-dollar"], a: 0 },
-    { q: "4. [span_3](start_span)It's nice to have a _______ vacation.[span_3](end_span)", o: ["two weeks", "two-week"], a: 1 },
-    { q: "5. [span_4](start_span)Robert's house has _______.[span_4](end_span)", o: ["three bedrooms", "three-bedroom"], a: 0 },
-    { q: "6. [span_5](start_span)I'd like to take a _______ break.[span_5](end_span)", o: ["ten minutes", "ten-minute"], a: 1 },
-    { q: "7. [span_6](start_span)Lt Lee's new sports car has _______.[span_6](end_span)", o: ["two doors", "two-door"], a: 0 },
-    { q: "8. [span_7](start_span)You need to use a _______ pot to cook the rice.[span_7](end_span)", o: ["three quarts", "three-quart"], a: 1 },
-    { q: "9. [span_8](start_span)It _______ a new car.[span_8](end_span)", o: ["to look like", "looks like", "like to look", "looks like it"], a: 1 },
-    { q: "10. The letter has six pages. [span_9](start_span)It's a _______ letter.[span_9](end_span)", o: ["page six", "six-pages", "six-page", "pages six"], a: 2 },
-    { q: "11. [span_10](start_span)That house _______ over a hundred years ago.[span_10](end_span)", o: ["built", "was built", "is built", "was building"], a: 1 },
-    { q: "12. I think he's about 35 years old. [span_11](start_span)He's in his _______-thirties.[span_11](end_span)", o: ["mid", "neat", "elderly", "early"], a: 0 },
-    { q: "13. _[span_12](start_span)______ to the library?[span_12](end_span)", o: ["The books were return", "Did the books return", "Were the books returned", "The books returned"], a: 2 },
-    { q: "14. If John says he's coming at 8:00, he'll be here. [span_13](start_span)He's a very _______ person.[span_13](end_span)", o: ["reliable", "neat", "messy", "stingy"], a: 0 },
-    { q: "15. Many men become _______ when they get older. [span_14](start_span)They lose a lot of their hair.[span_14](end_span)", o: ["curly", "bald", "wavy", "blond"], a: 1 },
-    { q: "16. [span_15](start_span)This homework isn't extremely difficult, but it's very _______.[span_15](end_span)", o: ["demanding", "dependable", "neat", "reliable"], a: 0 },
-    { q: "17. [span_16](start_span)He appears _______ the boss.[span_16](end_span)", o: ["be", "to be", "being", "to be he's"], a: 1 },
-    { q: "18. Ann: What's the best hotel in the city? [span_17](start_span)Roger: Well, the Grande Hotel is a _______ hotel.[span_17](end_span)", o: ["five-star", "gets five stars", "five stars", "with five stars"], a: 0 },
-    { q: "19. My parents' _______ is very important to me. [span_18](start_span)That's why I always tell them the truth.[span_18](end_span)", o: ["character", "brunette", "quality", "trust"], a: 3 },
-    { q: "20. [span_19](start_span)The angry customer _______ his money back.[span_19](end_span)", o: ["shared", "relied on", "demanded", "depended on"], a: 2 },
-    { q: "21. [span_20](start_span)I really can't remember _______.[span_20](end_span)", o: ["is the apartment furnished", "if the apartment is furnished", "the apartment isn't furnished"], a: 1 },
-    { q: "22. It's really hot in here. [span_21](start_span)Can we turn on the _______?[span_21](end_span)", o: ["efficiency", "heating", "air conditioning"], a: 2 },
-    { q: "23. This library book is due. [span_22](start_span)You'd better _______.[span_22](end_span)", o: ["return it", "check it out", "lend it to me"], a: 0 },
-    { q: "24. [span_23](start_span)I need to save money so I can furnish my _______.[span_23](end_span)", o: ["apartment", "car", "lease"], a: 0 },
-    { q: "25. [span_24](start_span)Can you please tell me when _______ to arrive?[span_24](end_span)", o: ["if flight 35 is scheduled", "is flight 35 scheduled", "flight 35 is scheduled"], a: 2 },
-    { q: "26. John: Why do you exercise so much? [span_25](start_span)Mike: Because it keeps _______.[span_25](end_span)", o: ["me to fit", "I'm fit", "me fit"], a: 2 },
-    { q: "27. [span_26](start_span)Let's take highway 95 because it's a _______.[span_26](end_span)", o: ["four-lanes highway", "four-lane highway", "four lane of highway"], a: 1 },
-    { q: "28. [span_27](start_span)Excuse me, do you know _______ credit cards?[span_27](end_span)", o: ["does this store accepts", "if this store accepts", "whether accepts this store"], a: 1 },
-    { q: "29. [span_28](start_span)What utilities do you pay?[span_28](end_span)", o: ["efficiency and lease", "garbage and paint", "gas and water"], a: 2 },
-    { q: "30. [span_29](start_span)Maria is upset because she had _______ with her husband.[span_29](end_span)", o: ["a lease", "an argument", "a section"], a: 1 },
-    { q: "31. [span_30](start_span)I wonder _______ right now in China.[span_30](end_span)", o: ["what the weather is like", "how is the weather like", "if the weather is like"], a: 0 },
-    { q: "32. I'd like to play tennis. [span_31](start_span)Are there any _______ around here?[span_31](end_span)", o: ["courts", "sections", "districts"], a: 0 },
-    { q: "33. Transportation in this city is difficult. [span_32](start_span)There is too much _______.[span_32](end_span)", o: ["paint", "traffic", "privacy"], a: 1 },
-    { q: "34. Julia works in real estate. [span_33](start_span)She sells _______.[span_33](end_span)", o: ["furniture", "transportation", "houses and apartments"], a: 2 },
-    { q: "35. [span_34](start_span)Because of problems at work, Bob was _______ from the promotion list.[span_34](end_span)", o: ["excluded", "included", "considered"], a: 0 },
-    { q: "36. [span_35](start_span)I'd like to lease _______.[span_35](end_span)", o: ["a pet", "an apartment", "a classified ad"], a: 1 },
-    { q: "37. [span_36](start_span)Tickets for the play are _______ at the theater box office.[span_36](end_span)", o: ["public", "including", "available"], a: 2 },
-    { q: "38. [span_37](start_span)The Smith's have three _______: a cat and two dogs.[span_37](end_span)", o: ["pets", "sections", "arguments"], a: 0 },
-    { q: "39. Do you have an invitation? [span_38](start_span)This is a _______ party.[span_38](end_span)", o: ["due", "furnished", "private"], a: 2 },
-    { q: "40. [span_39](start_span)Brad and Mark always _______ about who gets to go first.[span_39](end_span)", o: ["include", "argue", "lease"], a: 1 }
+    { q: "1. Flight 209 is a _______ flight.", o: ["three hours", "three-hour"], a: 1 },
+    { q: "2. Your grandfather looks young for a _______ man.", o: ["75 years old", "75-year-old"], a: 1 },
+    { q: "3. Lunch usually costs about _______.", o: ["five dollars", "five-dollar"], a: 0 },
+    { q: "4. It's nice to have a _______ vacation.", o: ["two weeks", "two-week"], a: 1 },
+    { q: "5. Robert's house has _______.", o: ["three bedrooms", "three-bedroom"], a: 0 },
+    { q: "6. I'd like to take a _______ break.", o: ["ten minutes", "ten-minute"], a: 1 },
+    { q: "7. Lt Lee's new sports car has _______.", o: ["two doors", "two-door"], a: 0 },
+    { q: "8. You need to use a _______ pot to cook the rice.", o: ["three quarts", "three-quart"], a: 1 },
+    { q: "9. It _______ a new car.", o: ["to look like", "looks like", "like to look", "looks like it"], a: 1 },
+    { q: "10. The letter has six pages. It's a _______ letter.", o: ["page six", "six-pages", "six-page", "pages six"], a: 2 },
+    { q: "11. That house _______ over a hundred years ago.", o: ["built", "was built", "is built", "was building"], a: 1 },
+    { q: "12. I think he's about 35 years old. He's in his _______-thirties.", o: ["mid", "neat", "elderly", "early"], a: 0 },
+    { q: "13. _______ to the library?", o: ["The books were return", "Did the books return", "Were the books returned", "The books returned"], a: 2 },
+    { q: "14. If John says he's coming at 8:00, he'll be here. He's a very _______ person.", o: ["reliable", "neat", "messy", "stingy"], a: 0 },
+    { q: "15. Many men become _______ when they get older. They lose a lot of their hair.", o: ["curly", "bald", "wavy", "blond"], a: 1 },
+    { q: "16. This homework isn't extremely difficult, but it's very _______.", o: ["demanding", "dependable", "neat", "reliable"], a: 0 },
+    { q: "17. He appears _______ the boss.", o: ["be", "to be", "being", "to be he's"], a: 1 },
+    { q: "18. Ann: What's the best hotel in the city? Roger: Well, the Grande Hotel is a _______ hotel.", o: ["five-star", "gets five stars", "five stars", "with five stars"], a: 0 },
+    { q: "19. My parents' _______ is very important to me. That's why I always tell them the truth.", o: ["character", "brunette", "quality", "trust"], a: 3 },
+    { q: "20. The angry customer _______ his money back.", o: ["shared", "relied on", "demanded", "depended on"], a: 2 },
+    { q: "21. I really can't remember _______.", o: ["is the apartment furnished", "if the apartment is furnished", "the apartment isn't furnished"], a: 1 },
+    { q: "22. It's really hot in here. Can we turn on the _______?", o: ["efficiency", "heating", "air conditioning"], a: 2 },
+    { q: "23. This library book is due. You'd better _______.", o: ["return it", "check it out", "lend it to me"], a: 0 },
+    { q: "24. I need to save money so I can furnish my _______.", o: ["apartment", "car", "lease"], a: 0 },
+    { q: "25. Can you please tell me when _______ to arrive?", o: ["if flight 35 is scheduled", "is flight 35 scheduled", "flight 35 is scheduled"], a: 2 },
+    { q: "26. John: Why do you exercise so much? Mike: Because it keeps _______.", o: ["me to fit", "I'm fit", "me fit"], a: 2 },
+    { q: "27. Let's take highway 95 because it's a _______.", o: ["four-lanes highway", "four-lane highway", "four lane of highway"], a: 1 },
+    { q: "28. Excuse me, do you know _______ credit cards?", o: ["does this store accepts", "if this store accepts", "whether accepts this store"], a: 1 },
+    { q: "29. What utilities do you pay?", o: ["efficiency and lease", "garbage and paint", "gas and water"], a: 2 },
+    { q: "30. Maria is upset because she had _______ with her husband.", o: ["a lease", "an argument", "a section"], a: 1 },
+    { q: "31. I wonder _______ right now in China.", o: ["what the weather is like", "how is the weather like", "if the weather is like"], a: 0 },
+    { q: "32. I'd like to play tennis. Are there any _______ around here?", o: ["courts", "sections", "districts"], a: 0 },
+    { q: "33. Transportation in this city is difficult. There is too much _______.", o: ["paint", "traffic", "privacy"], a: 1 },
+    { q: "34. Julia works in real estate. She sells _______.", o: ["furniture", "transportation", "houses and apartments"], a: 2 },
+    { q: "35. Because of problems at work, Bob was _______ from the promotion list.", o: ["excluded", "included", "considered"], a: 0 },
+    { q: "36. I'd like to lease _______.", o: ["a pet", "an apartment", "a classified ad"], a: 1 },
+    { q: "37. Tickets for the play are _______ at the theater box office.", o: ["public", "including", "available"], a: 2 },
+    { q: "38. The Smith's have three _______: a cat and two dogs.", o: ["pets", "sections", "arguments"], a: 0 },
+    { q: "39. Do you have an invitation? This is a _______ party.", o: ["due", "furnished", "private"], a: 2 },
+    { q: "40. Brad and Mark always _______ about who gets to go first.", o: ["include", "argue", "lease"], a: 1 }
+];
+
+// 初始化
+const container = document.getElementById('questions-container');
+quizData.forEach((item, index) => {
+    const div = document.createElement('div');
+    div.className = 'quiz-item';
+    div.id = `q-item-${index}`;
+    let opts = item.o.map((o, i) => `
+        <label class="option-label" id="label-${index}-${i}">
+            <input type="radio" name="q${index}" value="${i}"> <span>${o}</span>
+        </label>`).join('');
+    div.innerHTML = `<span class="question-title">${item.q}</span><div class="options-group">${opts}</div>`;
+    container.appendChild(div);
+});
+
+function calculateScore() {
+    let score = 0;
+    let answered = 0;
+    
+    quizData.forEach((item, index) => {
+        const selected = document.querySelector(`input[name="q${index}"]:checked`);
+        const allLabels = document.querySelectorAll(`[id^="label-${index}-"]`);
+        
+        [span_6](start_span)// 顯示答案背景顏色[span_6](end_span)
+        allLabels[item.a].classList.add('correct-ans');
+        
+        if (selected) {
+            answered++;
+            const val = parseInt(selected.value);
+            if (val === item.a) {
+                score++;
+            } else {
+                document.getElementById(`label-${index}-${val}`).classList.add('wrong-ans');
+            }
+        }
+        // 禁用所有 Radio 防止修改
+        document.querySelectorAll(`input[name="q${index}"]`).forEach(r => r.disabled = true);
+    });
+
+    document.getElementById('final-score').innerText = score * 2.5;
+    document.getElementById('score-detail').innerText = `答對題數：${score} / 40 (未答：${40 - answered})`;
+    document.getElementById('result-modal').style.display = 'flex';
+    document.getElementById('submit-btn').disabled = true;
+    document.getElementById('submit-btn').innerText = "已提交答案";
+    document.getElementById('submit-btn').style.background = "#94a3b8";
+}
+
+function closeModal() { document.getElementById('result-modal').style.display = 'none'; }
+</script>
+</body>
+</html>
+e"], a: 1 }
 ];
 
 const container = document.getElementById('questions-container');
