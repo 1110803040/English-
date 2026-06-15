@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>英文期中練習系統 - 列表版</title>
+    <title>英文期中考練習系統</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
         body { font-family: 'Noto Sans TC', sans-serif; background-color: #f8fafc; }
-        .question-card { transition: all 0.3s ease; }
-        /* 自定義單選按鈕樣式 */
+        .question-card { transition: all 0.2s ease; }
         input[type="radio"]:checked + label {
             background-color: #eff6ff;
             border-color: #3b82f6;
@@ -17,12 +16,12 @@
         }
     </style>
 </head>
-<body class="py-6 px-4">
+<body class="py-6 px-4 bg-slate-50">
 
     <div class="max-w-2xl mx-auto">
-        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 mb-6">
-            <h1 class="text-2xl font-black text-slate-800">英文期中練習題庫</h1>
-            <p class="text-slate-500 text-sm mt-1">共 40 題，滿分 100 分。完成後點擊最下方提交按鈕。</p>
+        <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 mb-6 text-center md:text-left">
+            <h1 class="text-2xl font-black text-slate-800">英文期中綜合練習題庫</h1>
+            <p class="text-slate-500 text-sm mt-1">本測驗共 40 題，滿分 100 分。請逐題作答後，至最下方點擊「交卷並計算分數」。</p>
         </div>
 
         <form id="quizForm" class="space-y-4">
@@ -36,22 +35,24 @@
 
         <div id="resultModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
             <div class="bg-white rounded-[2.5rem] p-8 w-full max-w-md text-center shadow-2xl">
-                <h2 class="text-2xl font-bold text-slate-800">測驗成績</h2>
+                <h2 class="text-2xl font-bold text-slate-800">測驗成績揭曉</h2>
                 <div class="my-6">
                     <span id="finalScore" class="text-7xl font-black text-blue-600">0</span>
                     <span class="text-slate-400 font-bold">/100</span>
                 </div>
                 <p id="resultComment" class="text-slate-500 mb-8"></p>
                 <div class="space-y-3">
-                    <button onclick="closeResult()" class="w-full bg-slate-100 text-slate-700 py-4 rounded-2xl font-bold hover:bg-slate-200 transition">查看正確答案</button>
-                    <button onclick="location.reload()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition">重新練習</button>
+                    <button onclick="closeResult()" class="w-full bg-slate-100 text-slate-700 py-4 rounded-2xl font-bold hover:bg-slate-200 transition">查看錯題與解答</button>
+                    <button onclick="location.reload()" class="w-full bg-blue-600 text-white py-4 rounded-2xl font-bold hover:bg-blue-700 transition">重新挑戰</button>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
+        // 完全依據最新上傳圖片與考卷內容彙整的 40 道精選題
         const quizData = [
+            // 1-8: 連字號與修飾語 (Page 1 Exercise E)
             { q: "Flight 209 is a _______ flight.", o: ["three hours", "three-hour"], a: 1 },
             { q: "Your grandfather looks young for a _______ man.", o: ["75 years old", "75-year-old"], a: 1 },
             { q: "Lunch usually costs about _______.", o: ["five dollars", "five-dollar"], a: 0 },
@@ -60,45 +61,55 @@
             { q: "I'd like to take a _______ break.", o: ["ten minutes", "ten-minute"], a: 1 },
             { q: "Lt Lee's new sports car has _______.", o: ["two doors", "two-door"], a: 0 },
             { q: "You need to use a _______ pot to cook the rice.", o: ["three quarts", "three-quart"], a: 1 },
+            
+            // 9-14: 基礎句型與單字 (Page 2 Exercise G)
             { q: "It _______ a new car.", o: ["to look like", "looks like", "like to look", "looks like it"], a: 1 },
             { q: "The letter has six pages. It's a _______ letter.", o: ["page six", "six-pages", "six-page", "pages six"], a: 2 },
             { q: "That house _______ over a hundred years ago.", o: ["built", "was built", "is built", "was building"], a: 1 },
             { q: "I think he's about 35 years old. He's in his _______-thirties.", o: ["mid", "neat", "elderly", "early"], a: 0 },
             { q: "_______ to the library?", o: ["The books were return", "Did the books return", "Were the books returned", "The books returned"], a: 2 },
             { q: "If John says he's coming at 8:00, he'll be here. He's a very _______ person.", o: ["reliable", "neat", "messy", "stingy"], a: 0 },
+            
+            // 15-20: 進階形容詞與動塊選詞 (Page 3 Exercise G)
             { q: "Many men become _______ when they get older. They lose a lot of their hair.", o: ["curly", "bald", "wavy", "blond"], a: 1 },
             { q: "This homework isn't extremely difficult, but it's very _______.", o: ["demanding", "dependable", "neat", "reliable"], a: 0 },
             { q: "He appears _______ the boss.", o: ["be", "to be", "being", "to be he's"], a: 1 },
             { q: "Ann: What's the best hotel in the city? Roger: Well, the Grande Hotel is a _______ hotel.", o: ["five-star", "gets five stars", "five stars", "with five stars"], a: 0 },
             { q: "My parents' _______ is very important to me. That's why I always tell them the truth.", o: ["character", "brunette", "quality", "trust"], a: 3 },
             { q: "The angry customer _______ his money back.", o: ["shared", "relied on", "demanded", "depended on"], a: 2 },
-            { q: "I really can't remember _______.", o: ["is the apartment furnished", "if the apartment is furnished", "the apartment isn't furnished"], a: 1 },
-            { q: "It's really hot in here. Can we turn on the _______?", o: ["efficiency", "heating", "air conditioning"], a: 2 },
-            { q: "This library book is due. You'd better _______.", o: ["return it", "check it out", "lend it to me"], a: 0 },
-            { q: "I need to save money so I can furnish my _______.", o: ["apartment", "car", "lease"], a: 0 },
-            { q: "Can you please tell me when _______ to arrive?", o: ["if flight 35 is scheduled", "is flight 35 scheduled", "flight 35 is scheduled"], a: 2 },
-            { q: "John: Why do you exercise so much? Mike: Because it keeps _______.", o: ["me to fit", "I'm fit", "me fit"], a: 2 },
-            { q: "Let's take highway 95 because it's a _______.", o: ["four-lanes highway", "four-lane highway", "four lane of highway"], a: 1 },
-            { q: "Excuse me, do you know _______ credit cards?", o: ["does this store accepts", "if this store accepts", "whether accepts this store"], a: 1 },
-            { q: "What utilities do you pay?", o: ["efficiency and lease", "garbage and paint", "gas and water"], a: 2 },
-            { q: "Maria is upset because she had _______ with her husband.", o: ["a lease", "a section", "an argument"], a: 2 },
-            { q: "I wonder _______ right now in China.", o: ["what the weather is like", "how is the weather like", "if the weather is like"], a: 0 },
-            { q: "I'd like to play tennis. Are there any _______ around here?", o: ["courts", "sections", "districts"], a: 0 },
-            { q: "Transportation in this city is difficult. There is too much _______.", o: ["paint", "traffic", "privacy"], a: 1 },
-            { q: "Julia works in real estate. She sells _______.", o: ["furniture", "transportation", "houses and apartments"], a: 2 },
-            { q: "Because of problems at work, Bob was _______ from the promotion list.", o: ["excluded", "included", "considered"], a: 0 },
-            { q: "I'd like to lease _______.", o: ["a pet", "an apartment", "a classified ad"], a: 1 },
-            { q: "Tickets for the play are _______ at the theater box office.", o: ["public", "including", "available"], a: 2 },
-            { q: "The Smith's have three _______: a cat and two dogs.", o: ["pets", "sections", "arguments"], a: 0 },
-            { q: "Do you have an invitation? This is a _______ party.", o: ["due", "furnished", "private"], a: 2 },
-            { q: "Brad and Mark always _______ about who gets to go first.", o: ["include", "argue", "lease"], a: 1 }
+            
+            // 21-27: 單字與文法選擇 (圖片常考與文件混合題型)
+            { q: "I hate wearing a suit and tie. That's why I don't like _______ situations.", o: ["national", "disciplined", "formal", "international"], a: 2 },
+            { q: "The meeting was mandatory. 意即：", o: ["We wanted to go.", "We indicated the time.", "We had to go.", "We didn't attend."], a: 2 },
+            { q: "The national anthem is usually _______.", o: ["heard at parades", "seen at work", "given at weddings", "bought at stores"], a: 0 },
+            { q: "The students _______ in front of the flags before they got on the buses.", o: ["gathered", "associated", "supported", "preceded"], a: 0 },
+            { q: "The group that _______ in the ceremony wore _______ uniforms.", o: ["participated, Class A", "protected, informal", "governed, mandatory", "placed, informal"], a: 0 },
+            { q: "Basic training teaches soldiers to be very _______.", o: ["international", "disciplined", "informal", "confirmed"], a: 1 },
+            { q: "My family always _______ me when I have a problem.", o: ["sets", "supports", "gathers", "flies"], a: 1 },
+            
+            // 28-34: 被動語態與日常單字 (圖片考點)
+            { q: "High school precedes _______.", o: ["middle school", "elementary school", "college", "junior high school"], a: 2 },
+            { q: "A new hospital will _______ next to the police station.", o: ["build", "be built", "is builded"], a: 1 },
+            { q: "This patient _______ by Thursday.", o: ["must is seen", "must seen", "must be seen"], a: 2 },
+            { q: "Five players _______ by the coach for the new team.", o: ["selected", "be will select", "will be selected"], a: 2 },
+            { q: "Uniforms _______ worn on weekends.", o: ["don't have to be", "have to", "do have to"], a: 0 },
+            { q: "Children _______ care of by their parents.", o: ["must to take", "must took", "must be taken"], a: 2 },
+            { q: "The _______ for the garbage disposal is on the wall.", o: ["flag", "switch", "quality", "judgment"], a: 1 },
+            
+            // 35-40: 家居與工具情境選擇 (圖片考點)
+            { q: "My watch has stopped. I need a new _______.", o: ["mustache", "cord", "battery", "efficiency"], a: 2 },
+            { q: "I need to tighten these screws. Can you hand me the _______?", o: ["pen", "hanger", "air conditioner", "screwdriver"], a: 3 },
+            { q: "Electricity has many _______ in a home.", o: ["faces", "arguments", "uses", "occasions"], a: 2 },
+            { q: "I need my book back. Are you _______ with it yet?", o: ["through", "friendly", "insulated", "charged"], a: 0 },
+            { q: "Does the bus _______ on electricity or gasoline?", o: ["conduct", "run", "fly", "protect"], a: 1 },
+            { q: "She _______ her hair color from brown to blonde.", o: ["light", "lightest", "lightened", "lightly"], a: 2 }
         ];
 
         function initQuiz() {
             const container = document.getElementById("quizContainer");
             quizData.forEach((item, qIdx) => {
                 const qDiv = document.createElement("div");
-                qDiv.className = "question-card bg-white rounded-2xl p-6 shadow-sm border border-slate-100 mb-4";
+                qDiv.className = "question-card bg-white rounded-2xl p-6 shadow-sm border border-slate-100 mb-4 animate-fade-in";
                 qDiv.innerHTML = `
                     <p class="font-bold text-slate-800 mb-4">${qIdx + 1}. ${item.q}</p>
                     <div class="grid gap-2" id="q${qIdx}_options">
@@ -125,17 +136,17 @@
                 ansDiv.classList.remove("hidden");
                 
                 if (selected && parseInt(selected.value) === item.a) {
-                    userScore += 2.5;
-                    ansDiv.innerText = "正確！";
+                    userScore += 2.5; // 每題 2.5 分，共 100 分
+                    ansDiv.innerText = "✓ 正確！";
                     ansDiv.className = "mt-3 p-3 rounded-lg text-sm font-bold bg-green-50 text-green-700";
                 } else {
-                    ansDiv.innerText = `錯誤，正確答案：${item.o[item.a]}`;
+                    ansDiv.innerText = `✗ 錯誤。正確答案是：${item.o[item.a]}`;
                     ansDiv.className = "mt-3 p-3 rounded-lg text-sm font-bold bg-red-50 text-red-700";
                 }
             });
 
             document.getElementById("finalScore").innerText = userScore;
-            document.getElementById("resultComment").innerText = userScore >= 60 ? "表現不錯，繼續加油！" : "沒關係，多練習幾次會更好！";
+            document.getElementById("resultComment").innerText = userScore >= 60 ? "太棒了！概念掌握得很好，準備拿高分吧！" : "有些觀念還不太熟練，別灰心，多訂正幾次就可以囉！";
             document.getElementById("resultModal").classList.remove("hidden");
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
